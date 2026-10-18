@@ -288,7 +288,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     switch (role) {
       case 'owner':
         return state.orders;
-      case 'chef':
+      case 'head_chef':
+      case 'sous_chef':
+        // Head Chef and Sous Chef see all orders
+        return state.orders;
+      case 'line_chef':
+        // Line chefs only see their assigned orders
         return state.orders.filter(order => 
           order.items.some(item => item.assignedChefId === userId)
         );

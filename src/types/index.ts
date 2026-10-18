@@ -1,4 +1,6 @@
-export type UserRole = 'owner' | 'chef' | 'server' | 'customer';
+export type UserRole = 'owner' | 'head_chef' | 'line_chef' | 'sous_chef' | 'server' | 'customer';
+
+export type ChefRole = 'head_chef' | 'line_chef' | 'sous_chef';
 
 export type OrderStatus = 
   | 'pending'      // Order placed, waiting for kitchen
@@ -78,6 +80,8 @@ export interface Order {
 export interface Chef {
   id: string;
   name: string;
+  chefRole: ChefRole;
+  station?: string; // e.g., 'grill', 'saute', 'pastry', 'cold'
   specialties: MenuCategory[];
   activeOrders: number;
   maxConcurrentOrders: number;
@@ -140,7 +144,9 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, { label: string; color: st
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   owner: ['view_all', 'manage_menu', 'manage_staff', 'view_reports', 'manage_settings', 'view_financials'],
-  chef: ['view_kitchen', 'manage_own_orders', 'update_cooking_status', 'assign_to_self'],
+  head_chef: ['view_kitchen', 'manage_all_orders', 'assign_orders', 'view_reports', 'manage_station'],
+  line_chef: ['view_assigned_orders', 'update_cooking_status', 'mark_cooked', 'mark_prepared'],
+  sous_chef: ['view_kitchen', 'manage_all_orders', 'assign_orders', 'view_reports', 'manage_station'],
   server: ['view_assigned_orders', 'pickup_orders', 'deliver_orders', 'view_table_status'],
   customer: ['view_menu', 'place_order', 'view_own_orders', 'add_comments', 'make_payment'],
 };

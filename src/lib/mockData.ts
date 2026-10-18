@@ -233,25 +233,33 @@ export const MOCK_MENU: MenuItem[] = [
 ];
 
 export const MOCK_CHEFS: Chef[] = [
+  // HEAD CHEF - Kitchen Leader
   {
     id: 'c1',
-    name: 'Chef Marco Rossi',
-    specialties: ['mains', 'specials'],
-    activeOrders: 2,
-    maxConcurrentOrders: 5,
+    name: 'Marco Rossi',
+    chefRole: 'head_chef',
+    station: 'expediting',
+    specialties: ['mains', 'specials', 'appetizers', 'desserts'],
+    activeOrders: 0,
+    maxConcurrentOrders: 99, // Head chef doesn't cook, manages
     isAvailable: true,
   },
+  // LINE CHEFS - Station Chefs
   {
     id: 'c2',
-    name: 'Chef Sarah Chen',
-    specialties: ['mains', 'appetizers'],
+    name: 'Sarah Chen',
+    chefRole: 'line_chef',
+    station: 'grill',
+    specialties: ['mains'],
     activeOrders: 1,
     maxConcurrentOrders: 4,
     isAvailable: true,
   },
   {
     id: 'c3',
-    name: 'Chef Pierre Dubois',
+    name: 'Pierre Dubois',
+    chefRole: 'line_chef',
+    station: 'pastry',
     specialties: ['desserts', 'appetizers'],
     activeOrders: 0,
     maxConcurrentOrders: 3,
@@ -259,10 +267,32 @@ export const MOCK_CHEFS: Chef[] = [
   },
   {
     id: 'c4',
-    name: 'Chef James Wilson',
+    name: 'James Wilson',
+    chefRole: 'line_chef',
+    station: 'saute',
     specialties: ['mains', 'specials'],
-    activeOrders: 3,
-    maxConcurrentOrders: 5,
+    activeOrders: 1,
+    maxConcurrentOrders: 4,
+    isAvailable: true,
+  },
+  {
+    id: 'c5',
+    name: 'Ahmed Hassan',
+    chefRole: 'line_chef',
+    station: 'cold',
+    specialties: ['appetizers', 'desserts'],
+    activeOrders: 0,
+    maxConcurrentOrders: 3,
+    isAvailable: true,
+  },
+  {
+    id: 'c6',
+    name: 'Fatima Al-Zahra',
+    chefRole: 'sous_chef',
+    station: 'expediting',
+    specialties: ['mains', 'specials', 'appetizers'],
+    activeOrders: 0,
+    maxConcurrentOrders: 4,
     isAvailable: true,
   },
 ];
@@ -280,13 +310,19 @@ export const MOCK_TABLES: Table[] = [
 
 export const MOCK_USERS: User[] = [
   { id: 'u1', name: 'Ahmed Hassan', role: 'owner', email: 'ahmed@restaurant.com' },
-  { id: 'u2', name: 'Marco Rossi', role: 'chef', email: 'marco@restaurant.com' },
-  { id: 'u3', name: 'Sarah Chen', role: 'chef', email: 'sarah@restaurant.com' },
-  { id: 'u4', name: 'Pierre Dubois', role: 'chef', email: 'pierre@restaurant.com' },
-  { id: 'u5', name: 'James Wilson', role: 'chef', email: 'james@restaurant.com' },
+  // Head Chef
+  { id: 'u2', name: 'Marco Rossi', role: 'head_chef', email: 'marco@restaurant.com' },
+  // Line Chefs
+  { id: 'u3', name: 'Sarah Chen', role: 'line_chef', email: 'sarah@restaurant.com' },
+  { id: 'u4', name: 'Pierre Dubois', role: 'line_chef', email: 'pierre@restaurant.com' },
+  { id: 'u5', name: 'James Wilson', role: 'line_chef', email: 'james@restaurant.com' },
+  { id: 'u11', name: 'Ahmed Hassan Jr.', role: 'line_chef', email: 'ahmed.jr@restaurant.com' },
+  { id: 'u12', name: 'Fatima Al-Zahra', role: 'sous_chef', email: 'fatima.chef@restaurant.com' },
+  // Servers
   { id: 'u6', name: 'Fatima Ali', role: 'server', email: 'fatima@restaurant.com' },
   { id: 'u7', name: 'Omar Khaled', role: 'server', email: 'omar@restaurant.com' },
   { id: 'u8', name: 'Yasmin Ahmed', role: 'server', email: 'yasmin@restaurant.com' },
+  // Customers
   { id: 'u9', name: 'Customer John', role: 'customer', email: 'john@email.com' },
   { id: 'u10', name: 'Customer Sarah', role: 'customer', email: 'sarah@email.com' },
 ];

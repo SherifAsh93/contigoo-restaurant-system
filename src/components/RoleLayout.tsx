@@ -26,14 +26,32 @@ const ROLE_CONFIG = {
     icon: '👑',
     href: '/owner'
   },
-  chef: { 
-    label: 'Kitchen Dashboard', 
+  head_chef: { 
+    label: 'Head Chef Dashboard', 
+    color: 'from-red-600 to-red-700', 
+    textColor: 'text-red-600',
+    bgColor: 'bg-red-50',
+    borderColor: 'border-red-200',
+    icon: '👨‍🍳',
+    href: '/head-chef'
+  },
+  line_chef: { 
+    label: 'Line Chef Station', 
     color: 'from-orange-600 to-orange-700', 
     textColor: 'text-orange-600',
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-200',
+    icon: '🍳',
+    href: '/line-chef'
+  },
+  sous_chef: { 
+    label: 'Sous Chef Dashboard', 
+    color: 'from-amber-600 to-amber-700', 
+    textColor: 'text-amber-600',
+    bgColor: 'bg-amber-50',
+    borderColor: 'border-amber-200',
     icon: '👨‍🍳',
-    href: '/chef'
+    href: '/sous-chef'
   },
   server: { 
     label: 'Server Dashboard', 

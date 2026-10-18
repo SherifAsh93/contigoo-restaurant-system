@@ -11,10 +11,12 @@ import { MOCK_USERS } from '@/lib/mockData';
 import { UserRole } from '@/types';
 
 const ROLE_OPTIONS = [
-  { value: 'owner', label: 'Owner', description: 'Full access to all features' },
-  { value: 'chef', label: 'Head Chef', description: 'Kitchen management & cooking' },
-  { value: 'server', label: 'Server/Waiter', description: 'Order delivery & tables' },
-  { value: 'customer', label: 'Customer', description: 'Browse menu & place orders' },
+  { value: 'owner', label: 'Owner', description: 'Full access to all features', icon: '👑' },
+  { value: 'head_chef', label: 'Head Chef', description: 'Kitchen leader - assign & manage orders', icon: '👨‍🍳' },
+  { value: 'line_chef', label: 'Line Chef', description: 'Station chef - cook assigned orders', icon: '🍳' },
+  { value: 'sous_chef', label: 'Sous Chef', description: 'Assistant kitchen leader', icon: '👨‍🍳' },
+  { value: 'server', label: 'Server/Waiter', description: 'Order delivery & tables', icon: '🍽️' },
+  { value: 'customer', label: 'Customer', description: 'Browse menu & place orders', icon: '🍴' },
 ];
 
 export default function AuthPage() {
@@ -86,7 +88,7 @@ export default function AuthPage() {
                     }
                   `}
                 >
-                  <div className="text-2xl mb-1">{role.value === 'owner' ? '👑' : role.value === 'chef' ? '👨‍🍳' : role.value === 'server' ? '🍽️' : '🍴'}</div>
+                  <div className="text-2xl mb-1">{role.icon}</div>
                   <div className="font-semibold text-gray-900">{role.label}</div>
                   <div className="text-xs text-gray-500">{role.description}</div>
                 </button>

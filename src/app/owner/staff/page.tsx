@@ -18,7 +18,9 @@ export default function OwnerStaffPage() {
 
   const roles: { value: UserRole; label: string; color: string }[] = [
     { value: 'owner', label: 'Owner', color: 'purple' },
-    { value: 'chef', label: 'Chef', color: 'orange' },
+    { value: 'head_chef', label: 'Head Chef', color: 'red' },
+    { value: 'sous_chef', label: 'Sous Chef', color: 'amber' },
+    { value: 'line_chef', label: 'Line Chef', color: 'orange' },
     { value: 'server', label: 'Server', color: 'blue' },
   ];
 
@@ -57,7 +59,7 @@ export default function OwnerStaffPage() {
                 <h4 className="font-bold text-gray-900">{user.name}</h4>
                 <p className="text-sm text-gray-500">{user.email}</p>
               </div>
-              <Badge variant={user.role === 'owner' ? 'primary' : user.role === 'chef' ? 'warning' : 'info'} size="md">
+              <Badge variant={user.role === 'owner' ? 'primary' : user.role === 'head_chef' ? 'danger' : user.role === 'sous_chef' ? 'warning' : user.role === 'line_chef' ? 'warning' : 'info'} size="md">
                 {user.role.toUpperCase()}
               </Badge>
             </div>
