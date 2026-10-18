@@ -29,22 +29,22 @@ export default function HeadChefDashboardPage() {
   const pendingItems = orders.flatMap(order => 
     order.items
       .filter(item => item.status === 'pending')
-      .map(item => ({ ...item, orderId: order.id, orderNumber: order.orderNumber, tableNumber: order.tableNumber, customerName: order.customerName }))
+      .map(item => ({ ...item, orderId: order.id, orderNumber: order.orderNumber, tableNumber: order.tableNumber, customerName: order.customerName, customerId: order.customerId, createdAt: order.createdAt }))
   );
 
   const cookingItems = orders.flatMap(order => 
     order.items
       .filter(item => item.status === 'cooking' || item.status === 'assigned')
-      .map(item => ({ ...item, orderId: order.id, orderNumber: order.orderNumber, tableNumber: order.tableNumber, customerName: order.customerName }))
+      .map(item => ({ ...item, orderId: order.id, orderNumber: order.orderNumber, tableNumber: order.tableNumber, customerName: order.customerName, customerId: order.customerId, createdAt: order.createdAt }))
   );
 
   const readyItems = orders.flatMap(order => 
     order.items
       .filter(item => item.status === 'cooked' || item.status === 'prepared')
-      .map(item => ({ ...item, orderId: order.id, orderNumber: order.orderNumber, tableNumber: order.tableNumber, customerName: order.customerName }))
+      .map(item => ({ ...item, orderId: order.id, orderNumber: order.orderNumber, tableNumber: order.tableNumber, customerName: order.customerName, customerId: order.customerId, createdAt: order.createdAt }))
   );
 
-  const stations = [...new Set(lineChefs.map(c => c.station).filter(Boolean))];
+  const stations = [...new Set(lineChefs.map(c => c.station).filter((s): s is string => Boolean(s)))];
 
   const getStationForItem = (item: any): string => {
     const menuItem = item.menuItem;
@@ -56,8 +56,14 @@ export default function HeadChefDashboardPage() {
       'desserts': 'pastry',
       'drinks': 'bar',
     };
-    return stationMap[menuItem.category] || 'unassigned';
+    return stationMap[menuItem.category] ?? 'unassigned';
   };
+  
+  // Helper to ensure string return type for filter callbacks
+  function getStation(item: any): string {
+    const result = getStationForItem(item);
+    return result ?? 'unassigned';
+  }
 
   const handleAssign = (orderId: string, itemId: string, chefId: string) => {
     assignChefToItem(orderId, itemId, chefId);
@@ -162,8 +168,8 @@ export default function HeadChefDashboardPage() {
                       tax: item.totalPrice * 0.1,
                       total: item.totalPrice * 1.1,
                       paymentStatus: 'pending',
-                      createdAt: item.createdAt || new Date(),
-                      updatedAt: new Date(),
+                      createdAt: item.createdAt ? new Date(item.createdAt) : new Date('2024-01-01'),
+                      updatedAt: new Date('2024-01-01'),
                     }} 
                     variant="kitchen" 
                     onAction={(order, action, itemId) => {
@@ -318,10 +324,16 @@ export default function HeadChefDashboardPage() {
         <div className="space-y-6">
           <h3 className="text-lg font-bold text-gray-900">Station Overview</h3>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {stations.map((station) => {
+{stations.map((station) => {
               const chef = getChefForStation(station);
-              const stationItems = cookingItems.filter(item => getStationForItem(item) === station);
-              const stationPending = pendingItems.filter(item => getStationForItem(item) === station);
+              const stationItems = cookingItems.filter(item => {
+                const itemStation = getStationForItem(item);
+                return (itemStation as string) === station;
+              });
+              const stationPending = pendingItems.filter(item => {
+                const itemStation = getStationForItem(item);
+                return (itemStation as string) === station;
+              });
               return (
                 <Card key={station} variant="elevated" padding="lg" className="border-l-4 border-orange-500">
                   <div className="flex items-center justify-between mb-4">
