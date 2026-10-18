@@ -12,6 +12,60 @@ import { MenuItem, MenuCategory } from '@/types';
 import { MOCK_MENU, MOCK_CATEGORIES } from '@/lib/mockData';
 import { formatCurrency, formatTime } from '@/lib/utils';
 
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onstart: ((this: SpeechRecognition, ev: Event) => void) | null;
+  onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => void) | null;
+  onerror: ((this: SpeechRecognition, ev: SpeechRecognitionErrorEvent) => void) | null;
+  onend: ((this: SpeechRecognition, ev: Event) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+// Type for the SpeechRecognition constructor
+type SpeechRecognitionConstructor = new () => SpeechRecognition;
+
+// Extend Window interface for Web Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: SpeechRecognitionConstructor;
+    webkitSpeechRecognition: SpeechRecognitionConstructor;
+  }
+}
+
 const CATEGORY_ICONS: Record<MenuCategory, string> = {
   appetizers: '🥗',
   mains: '🍖',
@@ -27,8 +81,59 @@ export default function CustomerDashboardPage() {
   const [showCart, setShowCart] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceError, setVoiceError] = useState('');
   const [ordersHistory, setOrdersHistory] = useState(() => orders.filter(o => o.customerId === currentUser?.id));
   const [activeTab, setActiveTab] = useState<'menu' | 'orders'>('menu');
+  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
+
+  // Initialize Web Speech API
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
+      setRecognition(recognition);
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setVoiceTranscript('');
+        setVoiceError('');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        setVoiceTranscript(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setVoiceError(`Error: ${event.error}`);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+        // Process final transcript
+        if (voiceTranscript.trim()) {
+          parseVoiceOrder(voiceTranscript);
+        }
+      };
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognition) {
+        recognition.abort();
+      }
+    };
+  }, [recognition]);
 
   // Sync orders when they change
   useEffect(() => {
@@ -67,33 +172,102 @@ export default function CustomerDashboardPage() {
   const clearCart = () => setCart([]);
 
   const handleVoiceOrder = () => {
-    setIsListening(true);
-    // Mock voice recognition
-    setTimeout(() => {
-      const samples = [
-        "I'd like the ribeye steak medium rare",
-        "Two chicken parmesan and a caesar salad",
-        "One lobster linguine and a glass of red wine",
-        "The wagyu burger with fries",
-        "Tiramisu and an espresso",
-      ];
-      const sample = samples[Math.floor(Math.random() * samples.length)];
-      setVoiceTranscript(sample);
-      setIsListening(false);
-      
-      // Try to parse and add to cart
-      parseVoiceOrder(sample);
-    }, 1500);
+    if (recognition) {
+      setVoiceError('');
+      try {
+        recognition.start();
+      } catch (err) {
+        console.error('Speech recognition start error:', err);
+        setVoiceError('Could not start voice recognition. Please try again.');
+        setIsListening(false);
+      }
+    } else {
+      setVoiceError('Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari.');
+    }
+  };
+
+  const stopVoiceOrder = () => {
+    if (recognition) {
+      recognition.stop();
+    }
+  };
+
+  const handleVoiceOrderTouch = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleVoiceOrder();
+  };
+
+  const handleVoiceOrderTouchEnd = (e: React.TouchEvent) => {
+    e.preventDefault();
+    stopVoiceOrder();
   };
 
   const parseVoiceOrder = (transcript: string) => {
-    // Simple keyword matching for demo
     const lower = transcript.toLowerCase();
+    console.log('Voice transcript:', transcript);
+    
+    // Extract quantities and items
+    const quantityPatterns = [
+      /(\d+)\s*(?:x|times?)\s+/g,  // "2x burger" or "2 times burger"
+      /\b(one|two|three|four|five|six|seven|eight|nine|ten)\s+/g,  // "one burger"
+    ];
+    
+    // Number words to digits
+    const numberWords: Record<string, number> = {
+      'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+      'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    };
+
+    let matchedItems = 0;
+    
+    // Try to match menu items in transcript
     menu.forEach(item => {
-      if (lower.includes(item.name.toLowerCase())) {
-        addToCart(item);
+      const itemName = item.name.toLowerCase();
+      const words = itemName.split(' ');
+      
+      // Check if any significant word from item name is in transcript
+      const significantWords = words.filter(w => w.length > 3);
+      const hasMatch = significantWords.some(word => 
+        transcript.toLowerCase().includes(word)
+      );
+      
+      if (hasMatch) {
+        // Try to extract quantity before the item name
+        let quantity = 1;
+        
+        // Look for patterns like "2 burger" or "two burger" before the item
+        for (const pattern of quantityPatterns) {
+          const matches = [...transcript.toLowerCase().matchAll(pattern)];
+          for (const match of matches) {
+            const matchEnd = match.index + match[0].length;
+            // If quantity appears before item name
+            if (transcript.toLowerCase().indexOf(significantWords[0], matchEnd) > matchEnd) {
+              const qtyStr = match[1] || match[0].trim().split(' ')[0];
+              quantity = numberWords[qtyStr.toLowerCase()] || parseInt(qtyStr) || 1;
+              break;
+            }
+          }
+        }
+        
+        // Also check for "two of the..." patterns
+        const twoOfPattern = new RegExp(`(one|two|three|four|five|six|seven|eight|nine|ten|\\d+)\\s*(?:of\\s+the?\\s*)?${significantWords[0]}`, 'i');
+        const twoOfMatch = transcript.match(twoOfPattern);
+        if (twoOfMatch) {
+          const qtyStr = twoOfMatch[1];
+          quantity = numberWords[qtyStr.toLowerCase()] || parseInt(qtyStr) || 1;
+        }
+        
+        for (let i = 0; i < quantity; i++) {
+          addToCart(item);
+        }
+        matchedItems++;
+        console.log(`Added ${quantity}x ${item.name} via voice`);
       }
     });
+    
+    if (matchedItems === 0) {
+      console.log('No menu items matched in transcript');
+    }
   };
 
   const placeOrder = () => {
